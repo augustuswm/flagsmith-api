@@ -101,6 +101,7 @@ class Trait(models.Model):
         return "Identity: %s - %s" % (self.identity.identifier, self.trait_key)
 
     def save(self, *args, **kwargs):
+        print("Begin persisting trait")
         if not self.identity.environment.project.organisation.persist_trait_data:
             # this is a final line of defense to ensure that traits are never saved
             # for organisations which have the flag set to not persist trait data

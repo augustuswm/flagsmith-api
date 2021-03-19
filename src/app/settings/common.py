@@ -64,7 +64,8 @@ INTERNAL_IPS = ["127.0.0.1"]
 
 # In order to run a load balanced solution, we need to whitelist the internal ip
 try:
-    internal_ip = requests.get("http://instance-data/latest/meta-data/local-ipv4").text
+    internal_ip = requests.get(
+        "http://instance-data/latest/meta-data/local-ipv4").text
 except requests.exceptions.ConnectionError:
     pass
 else:
@@ -131,22 +132,33 @@ if GOOGLE_ANALYTICS_KEY or INFLUXDB_TOKEN:
 
 SITE_ID = 1
 
-# Allows collectstatic to run without a database, mainly for Docker builds to collectstatic at build time
-if "DATABASE_URL" in os.environ:
-    DATABASES = {"default": dj_database_url.parse(env("DATABASE_URL"), conn_max_age=60)}
-elif "DJANGO_DB_NAME" in os.environ:
-    # If there is no DATABASE_URL configured, check for old style DB config parameters
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": os.environ["DJANGO_DB_NAME"],
-            "USER": os.environ["DJANGO_DB_USER"],
-            "PASSWORD": os.environ["DJANGO_DB_PASSWORD"],
-            "HOST": os.environ["DJANGO_DB_HOST"],
-            "PORT": os.environ["DJANGO_DB_PORT"],
-            "CONN_MAX_AGE": 60,
-        },
-    }
+#   DJANGO_DB_NAME: bullettrain
+#   DJANGO_DB_USER: postgres
+#   DJANGO_DB_PASSWORD: password
+#   DJANGO_DB_PORT: 5432
+#   DJANGO_ALLOWED_HOSTS: localhost
+#   DJANGO_DB_HOST: db
+#   DATABASE_URL:
+
+DATABASES = {"default": dj_database_url.parse(
+    "postgres://postgres:dev@127.0.0.1:5432/bullettrain", conn_max_age=60)}
+
+# # Allows collectstatic to run without a database, mainly for Docker builds to collectstatic at build time
+# if "DATABASE_URL" in os.environ:
+#     DATABASES = {"default": dj_database_url.parse(env("DATABASE_URL"), conn_max_age=60)}
+# elif "DJANGO_DB_NAME" in os.environ:
+#     # If there is no DATABASE_URL configured, check for old style DB config parameters
+#     DATABASES = {
+#         "default": {
+#             "ENGINE": "django.db.backends.postgresql",
+#             "NAME": os.environ["DJANGO_DB_NAME"],
+#             "USER": os.environ["DJANGO_DB_USER"],
+#             "PASSWORD": os.environ["DJANGO_DB_PASSWORD"],
+#             "HOST": os.environ["DJANGO_DB_HOST"],
+#             "PORT": os.environ["DJANGO_DB_PORT"],
+#             "CONN_MAX_AGE": 60,
+#         },
+#     }
 
 REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
@@ -177,7 +189,8 @@ if GOOGLE_ANALYTICS_KEY:
 if INFLUXDB_TOKEN:
     MIDDLEWARE.append("app_analytics.middleware.InfluxDBMiddleware")
 
-ALLOWED_ADMIN_IP_ADDRESSES = env.list("ALLOWED_ADMIN_IP_ADDRESSES", default=list())
+ALLOWED_ADMIN_IP_ADDRESSES = env.list(
+    "ALLOWED_ADMIN_IP_ADDRESSES", default=list())
 if len(ALLOWED_ADMIN_IP_ADDRESSES) > 0:
     warnings.warn(
         "Restricting access to the admin site for ip addresses %s"
@@ -223,7 +236,8 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 DJANGO_ADMIN_SSO_OAUTH_CLIENT_ID = env.str("OAUTH_CLIENT_ID", default="")
-DJANGO_ADMIN_SSO_OAUTH_CLIENT_SECRET = env.str("OAUTH_CLIENT_SECRET", default="")
+DJANGO_ADMIN_SSO_OAUTH_CLIENT_SECRET = env.str(
+    "OAUTH_CLIENT_SECRET", default="")
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.9/topics/i18n/
@@ -247,7 +261,8 @@ STATIC_ROOT = os.path.join(PROJECT_ROOT, "../../static/")
 # CORS settings
 
 CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOW_HEADERS = default_headers + ("X-Environment-Key", "X-E2E-Test-Auth-Token")
+CORS_ALLOW_HEADERS = default_headers + \
+    ("X-Environment-Key", "X-E2E-Test-Auth-Token")
 
 DEFAULT_FROM_EMAIL = env("SENDER_EMAIL", default="noreply@flagsmith.com")
 EMAIL_CONFIGURATION = {
@@ -432,8 +447,10 @@ SENTRY_SDK_DSN = env("SENTRY_SDK_DSN", default=None)
 SENTRY_TRACE_SAMPLE_RATE = env.float("SENTRY_TRACE_SAMPLE_RATE", default=1.0)
 
 # allow users to access the admin console
-ENABLE_ADMIN_ACCESS_USER_PASS = env.bool("ENABLE_ADMIN_ACCESS_USER_PASS", default=None)
+ENABLE_ADMIN_ACCESS_USER_PASS = env.bool(
+    "ENABLE_ADMIN_ACCESS_USER_PASS", default=None)
 
 # Set this flag to prevent traits being stored for all Organisations within the application
 # Useful for data sensitive installations that dont want persistent traits.
-DEFAULT_ORG_STORE_TRAITS_VALUE = env.bool("DEFAULT_ORG_STORE_TRAITS_VALUE", True)
+DEFAULT_ORG_STORE_TRAITS_VALUE = env.bool(
+    "DEFAULT_ORG_STORE_TRAITS_VALUE", True)

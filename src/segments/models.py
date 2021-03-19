@@ -43,6 +43,8 @@ class Segment(models.Model):
         self, identity: Identity, traits: typing.List[Trait] = None
     ) -> bool:
         rules = self.rules.all()
+
+        print("Evaluating segment", self, "for", identity, "with", traits)
         return rules.count() > 0 and all(
             rule.does_identity_match(identity, traits) for rule in rules
         )
