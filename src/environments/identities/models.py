@@ -115,12 +115,18 @@ class Identity(models.Model):
         )
         environment_default_query = Q(identity=None, feature_segment=None)
 
-        # define the full query
-        full_query = belongs_to_environment_query & (
-            overridden_for_identity_query
-            | overridden_for_segment_query
-            | environment_default_query
-        )
+        # Only look for identity overrides if this identity has been persisted already
+        if self._state.adding:
+            full_query = belongs_to_environment_query & (
+                overridden_for_segment_query
+                | environment_default_query
+            )
+        else:
+            full_query = belongs_to_environment_query & (
+                overridden_for_identity_query
+                | overridden_for_segment_query
+                | environment_default_query
+            )
 
         select_related_args = [
             "feature",
