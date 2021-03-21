@@ -412,10 +412,12 @@ class FeatureState(models.Model):
 
     def __str__(self):
         if self.environment is not None:
-            return "Project %s - Environment %s - Feature %s - Enabled: %r" % (
+            return "Project %s - Environment %s - Feature %s - Segment %s - Identity %s - Enabled: %r" % (
                 self.environment.project.name,
                 self.environment.name,
                 self.feature.name,
+                self.feature_segment,
+                self.identity,
                 self.enabled,
             )
         elif self.identity is not None:

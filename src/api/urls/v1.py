@@ -6,7 +6,8 @@ from drf_yasg2.views import get_schema_view
 from rest_framework import authentication, permissions, routers
 
 from environments.identities.traits.views import SDKTraits
-from environments.identities.views import SDKIdentities, SDKAnonymousIdentities
+from environments.identities.views import SDKIdentities
+from evaluations.views import SDKEvaluations
 from features.views import SDKFeatureStates
 from organisations.views import chargebee_webhook
 
@@ -42,8 +43,7 @@ urlpatterns = [
     # Client SDK urls
     url(r"^flags/$", SDKFeatureStates.as_view(), name="flags"),
     url(r"^identities/$", SDKIdentities.as_view(), name="sdk-identities"),
-    url(r"^identities/anonymous$", SDKAnonymousIdentities.as_view(),
-        name="sdk-anonymous-identities"),
+    url(r"^evaluate/$", SDKEvaluations.as_view(), name="evaluations"),
     url(r"^traits/", include(traits_router.urls), name="traits"),
     url(r"^analytics/flags/$", SDKAnalyticsFlags.as_view()),
     # API documentation

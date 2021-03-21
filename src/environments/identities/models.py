@@ -8,7 +8,6 @@ from environments.models import Environment
 from environments.identities.traits.models import Trait
 from features.models import FeatureState
 
-
 @python_2_unicode_compatible
 class Identity(models.Model):
     identifier = models.CharField(max_length=2000)
@@ -24,6 +23,73 @@ class Identity(models.Model):
         # hard code the table name after moving from the environments app to prevent
         # issues with production deployment due to multi server configuration.
         db_table = "environments_identity"
+
+    def get_feature_states(self, features: typing.List[str], traits: typing.List[Trait] = None):
+        """
+        Get a specified set of feature states for an identity. This method returns a single flag for
+        each feature in the requested list that exists in the identity's environment's project. The 
+        flag returned is the correct flag based on the priorities as follows (highest -> lowest):
+
+            1. Identity - flag override for this specific identity
+            2. Segment - flag overridden for a segment this identity belongs to
+            3. Environment - default value for the environment
+
+        :return: (list) flags for an identity with the correct values based on
+            identity / segment priorities
+        """
+        segments = self.get_segments(traits=traits)
+
+        # define sub queries
+        belongs_to_environment_query = Q(environment=self.environment)
+        is_requested = Q(feature__name__in=features)
+        overridden_for_identity_query = Q(identity=self)
+        overridden_for_segment_query = Q(
+            feature_segment__segment__in=segments,
+            feature_segment__environment=self.environment,
+        )
+        environment_default_query = Q(identity=None, feature_segment=None)
+
+        # Only look for identity overrides if this identity has been persisted already
+        if self._state.adding:
+            full_query = belongs_to_environment_query & is_requested & (
+                overridden_for_segment_query
+                | environment_default_query
+            )
+        else:
+            full_query = belongs_to_environment_query & is_requested & (
+                overridden_for_identity_query
+                | overridden_for_segment_query
+                | environment_default_query
+            )
+
+        select_related_args = [
+            "feature",
+            "feature_state_value",
+            "feature_segment",
+            "feature_segment__segment",
+        ]
+
+        # When Project's hide_disabled_flags enabled, exclude disabled Features from the list
+        all_flags = FeatureState.objects.select_related(*select_related_args).filter(
+            full_query
+        )
+
+        # iterate over all the flags and build a dictionary keyed on feature with the highest priority flag
+        # for the given identity as the value.
+        identity_flags = {}
+        for flag in all_flags:
+            if flag.feature_id not in identity_flags:
+                identity_flags[flag.feature_id] = flag
+            else:
+                if flag > identity_flags[flag.feature_id]:
+                    identity_flags[flag.feature_id] = flag
+
+        if self.environment.project.hide_disabled_flags:
+            # filter out any flags that are disabled if configured on the project
+            # Note: done here instead of the DB because of CH1245
+            return [value for value in identity_flags.values() if value.enabled]
+
+        return list(identity_flags.values())
 
     def get_all_feature_states(self, traits: typing.List[Trait] = None):
         """
